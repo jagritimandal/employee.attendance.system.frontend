@@ -99,7 +99,7 @@ function Register() {
       </form>
       <div>
         <span>Already registered? </span>
-        <button type="button" onClick={() => navigate("/login")}>
+        <button type="button" onClick={() => navigate("/loginj")}>
           Login
         </button>
       </div>
