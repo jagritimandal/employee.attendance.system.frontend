@@ -119,7 +119,7 @@ const AttendancePage = () => {
         // ✅ Fetch IP from backend instead of ipify.org
         const res = await ep1.get("/api/v2/getipj");
         const ipAddr = res.data.ip;
-        //console.log("Fetched IP:", ipAddr);
+        console.log("Fetched IP:", ipAddr);
         setIp(ipAddr);
 
         // Fetch attendance + status from backend
