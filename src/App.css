@@ -1,0 +1,37 @@
+/* App.css */
+
+/* Reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+body, #root {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #f1f3f5;
+}
+
+/* Reusable centered container */
+.center-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  min-height: 100vh;
+  padding: 30px;
+}
+
+/* Card wrapper */
+.card {
+  background: #fff;
+  padding: 30px;
+  border-radius: 14px;
+  box-shadow: 0px 6px 16px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 800px; /* 🔥 increased from 600px */
+}

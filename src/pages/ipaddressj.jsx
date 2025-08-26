@@ -1,0 +1,187 @@
+import React, { useState, useEffect } from "react";
+import {
+  Box, Typography, TextField, Button,
+  Alert, List, ListItem, ListItemText,
+  Switch, IconButton, Divider
+} from "@mui/material";
+import DeleteIcon from "@mui/icons-material/Delete";
+import ep1 from "../api/ep1"; // Axios instance
+import global1 from "./global1";
+
+function IpManagementPage() {
+  const [ip, setIp] = useState("");
+  const [email, setEmail] = useState("");
+  const colid = global1.colid || "";
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [ipList, setIpList] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  // Fetch IPs on load
+  useEffect(() => {
+    fetchIpList();
+  }, []);
+
+  const fetchIpList = async () => {
+    try {
+      const res = await ep1.get("/api/v2/getallipsj");
+      // Ensure array format
+      const ipsArray = Array.isArray(res.data.ips)
+        ? res.data.ips
+        : Array.isArray(res.data)
+        ? res.data
+        : [];
+      setIpList(ipsArray);
+    } catch (err) {
+      console.error(err);
+      setError("Failed to load IP list");
+    }
+  };
+
+  // Add new IP
+  const saveIpToDb = async () => {
+    setMessage("");
+    setError("");
+    if (!ip || !email) {
+      setError("IP and Email are required");
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await ep1.post("/api/v2/addipj", { ip, email, colid });
+      setMessage(res.data.message || "Saved successfully");
+      setIp("");
+      setEmail("");
+      fetchIpList();
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to save");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Toggle active status
+  const handleToggleStatus = async (ip, isActive) => {
+    try {
+      await ep1.post("/api/v2/updatestatusj", { ip, isActive });
+      fetchIpList();
+    } catch {
+      setError("Failed to update status");
+    }
+  };
+
+  // Delete IP
+  const handleDelete = async (ip) => {
+    try {
+      await ep1.get(`/api/v2/deleteipj?ip=${encodeURIComponent(ip)}`);
+      fetchIpList();
+    } catch {
+      setError("Failed to delete IP");
+    }
+  };
+
+  // Filter IPs by search term
+    const filteredIpList = ipList.filter(item => {
+    const term = searchTerm.toLowerCase();
+    const ipValue = String(item.ip || "").toLowerCase();
+    const emailValue = String(item.email || "").toLowerCase();
+    const colidValue = String(item.colid || "").toLowerCase();
+
+    return ipValue.includes(term) || emailValue.includes(term) || colidValue.includes(term);
+  });
+
+  return (
+    <Box p={4} sx={{ maxWidth: 600, mx: "auto" }}>
+
+      {/* ...form code... */}
+      <Typography variant="h5" gutterBottom>
+        IP Address Management
+      </Typography>
+
+      {message && <Alert severity="success" sx={{ mb: 2 }}>{message}</Alert>}
+      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+
+      {/* Add IP Form */}
+      <Box display="flex" gap={2} flexWrap="wrap" mb={3}>
+        <TextField
+          label="IP Address"
+          value={ip}
+          onChange={(e) => setIp(e.target.value)}
+          sx={{ flexGrow: 1, minWidth: 150 }}
+        />
+        <TextField
+          label="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          sx={{ flexGrow: 1, minWidth: 150 }}
+        />
+        <Button variant="contained" onClick={saveIpToDb} disabled={loading}>
+          {loading ? "Saving..." : "Save"}
+        </Button>
+      </Box>
+
+      <TextField
+        label="Search by IP, Email or ColID"
+        value={searchTerm}
+        onChange={e => setSearchTerm(e.target.value)}
+        fullWidth
+        sx={{ mb: 2 }}
+      />
+
+      {searchTerm.trim() !== "" && (
+        <List>
+          {filteredIpList.length === 0 ? (
+            <Typography align="center" sx={{ mt: 3 }}>
+              No IP records found
+            </Typography>
+          ) : (
+            filteredIpList.map(({ _id, ip, email, colid, isActive }) => (
+              <React.Fragment key={_id}>
+                <ListItem
+                  secondaryAction={
+                    <>
+                      <Switch
+                        checked={isActive}
+                        onChange={() => handleToggleStatus(ip, !isActive)}
+                        edge="end"
+                        sx={{ mr: 2 }}
+                      />
+                      <IconButton
+                        edge="end"
+                        aria-label="delete"
+                        onClick={() => handleDelete(ip)}
+                        color="error"
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </>
+                  }
+                >
+                  <ListItemText
+                    primary={`IP: ${ip}`}
+                    secondary={
+                      <>
+                        <Typography component="span" variant="body2" color="text.primary">
+                          Email: {email}
+                        </Typography>
+                        <br />
+                        <Typography component="span" variant="body2" color="text.primary">
+                          Colid: {colid || "N/A"}
+                        </Typography>
+                      </>
+                    }
+                  />
+                </ListItem>
+                <Divider />
+              </React.Fragment>
+            ))
+          )}
+        </List>
+      )}
+    </Box>
+  );
+
+}
+
+export default IpManagementPage;
