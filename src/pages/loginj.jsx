@@ -51,7 +51,7 @@ function Login() {
         <Box mt={2} textAlign="center">
           <Typography variant="body2">
             Don't have an account?{" "}
-            <Button variant="text" onClick={() => navigate("/register")}>Register</Button>
+            <Button variant="text" onClick={() => navigate("/registerj")}>Register</Button>
           </Typography>
         </Box>
       </Box>
