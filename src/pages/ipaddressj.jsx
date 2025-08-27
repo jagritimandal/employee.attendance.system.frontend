@@ -22,7 +22,6 @@ function IpManagementPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
-  // Fetch IPs on load
   useEffect(() => {
     fetchIpList();
   }, []);
@@ -81,13 +80,15 @@ function IpManagementPage() {
     }
   };
 
-  // Filter IPs by search term
+  // Filter IPs if searchTerm exists
   const filteredIpList = ipList.filter(item => {
+    if (!searchTerm.trim()) return true; // show all if no search
     const term = searchTerm.toLowerCase();
-    const ipValue = String(item.ip || "").toLowerCase();
-    const emailValue = String(item.email || "").toLowerCase();
-    const colidValue = String(item.colid || "").toLowerCase();
-    return ipValue.includes(term) || emailValue.includes(term) || colidValue.includes(term);
+    return (
+      String(item.ip || "").toLowerCase().includes(term) ||
+      String(item.email || "").toLowerCase().includes(term) ||
+      String(item.colid || "").toLowerCase().includes(term)
+    );
   });
 
   // Pagination calculations
@@ -97,7 +98,7 @@ function IpManagementPage() {
     currentPage * itemsPerPage
   );
 
-  // Reset page on new search
+  // Reset page on search change
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm]);
@@ -138,80 +139,76 @@ function IpManagementPage() {
         sx={{ mb: 2 }}
       />
 
-      {searchTerm.trim() !== "" && (
-        <>
-          <List>
-            {paginatedIpList.length === 0 ? (
-              <Typography align="center" sx={{ mt: 3 }}>
-                No IP records found
-              </Typography>
-            ) : (
-              paginatedIpList.map(({ _id, ip, email, colid, isActive }) => (
-                <React.Fragment key={_id}>
-                  <ListItem
-                    secondaryAction={
-                      <>
-                        <Switch
-                          checked={isActive}
-                          onChange={() => handleToggleStatus(ip, !isActive)}
-                          edge="end"
-                          sx={{ mr: 2 }}
-                        />
-                        <IconButton
-                          edge="end"
-                          aria-label="delete"
-                          onClick={() => handleDelete(ip)}
-                          color="error"
-                        >
-                          <DeleteIcon />
-                        </IconButton>
-                      </>
-                    }
-                  >
-                    <ListItemText
-                      primary={`IP: ${ip}`}
-                      secondary={
-                        <>
-                          <Typography component="span" variant="body2" color="text.primary">
-                            Email: {email}
-                          </Typography>
-                          <br />
-                          <Typography component="span" variant="body2" color="text.primary">
-                            Colid: {colid || "N/A"}
-                          </Typography>
-                        </>
-                      }
+      <List>
+        {paginatedIpList.length === 0 ? (
+          <Typography align="center" sx={{ mt: 3 }}>
+            No IP records found
+          </Typography>
+        ) : (
+          paginatedIpList.map(({ _id, ip, email, colid, isActive }) => (
+            <React.Fragment key={_id}>
+              <ListItem
+                secondaryAction={
+                  <>
+                    <Switch
+                      checked={isActive}
+                      onChange={() => handleToggleStatus(ip, !isActive)}
+                      edge="end"
+                      sx={{ mr: 2 }}
                     />
-                  </ListItem>
-                  <Divider />
-                </React.Fragment>
-              ))
-            )}
-          </List>
+                    <IconButton
+                      edge="end"
+                      aria-label="delete"
+                      onClick={() => handleDelete(ip)}
+                      color="error"
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                  </>
+                }
+              >
+                <ListItemText
+                  primary={`IP: ${ip}`}
+                  secondary={
+                    <>
+                      <Typography component="span" variant="body2" color="text.primary">
+                        Email: {email}
+                      </Typography>
+                      <br />
+                      <Typography component="span" variant="body2" color="text.primary">
+                        Colid: {colid || "N/A"}
+                      </Typography>
+                    </>
+                  }
+                />
+              </ListItem>
+              <Divider />
+            </React.Fragment>
+          ))
+        )}
+      </List>
 
-          {/* Pagination Controls */}
-          {totalPages > 1 && (
-            <Box display="flex" justifyContent="center" alignItems="center" mt={2} gap={1}>
-              <Button
-                variant="outlined"
-                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                disabled={currentPage === 1}
-              >
-                Previous
-              </Button>
-              <Typography>
-                Page {currentPage} of {totalPages}
-              </Typography>
-              <Button
-                variant="outlined"
-                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                disabled={currentPage === totalPages}
-              >
-                Next
-              </Button>
-            </Box>
-          )}
-        </>
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <Box display="flex" justifyContent="center" alignItems="center" mt={2} gap={1}>
+          <Button
+            variant="outlined"
+            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+            disabled={currentPage === 1}
+          >
+            Previous
+          </Button>
+          <Typography>
+            Page {currentPage} of {totalPages}
+          </Typography>
+          <Button
+            variant="outlined"
+            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+            disabled={currentPage === totalPages}
+          >
+            Next
+          </Button>
+        </Box>
       )}
     </Box>
   );
