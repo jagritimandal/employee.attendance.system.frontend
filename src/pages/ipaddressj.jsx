@@ -18,6 +18,10 @@ function IpManagementPage() {
   const [ipList, setIpList] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+
   // Fetch IPs on load
   useEffect(() => {
     fetchIpList();
@@ -26,7 +30,6 @@ function IpManagementPage() {
   const fetchIpList = async () => {
     try {
       const res = await ep1.get("/api/v2/getallipsj");
-      // Ensure array format
       const ipsArray = Array.isArray(res.data.ips)
         ? res.data.ips
         : Array.isArray(res.data)
@@ -39,7 +42,6 @@ function IpManagementPage() {
     }
   };
 
-  // Add new IP
   const saveIpToDb = async () => {
     setMessage("");
     setError("");
@@ -61,7 +63,6 @@ function IpManagementPage() {
     }
   };
 
-  // Toggle active status
   const handleToggleStatus = async (ip, isActive) => {
     try {
       await ep1.post("/api/v2/updatestatusj", { ip, isActive });
@@ -71,7 +72,6 @@ function IpManagementPage() {
     }
   };
 
-  // Delete IP
   const handleDelete = async (ip) => {
     try {
       await ep1.get(`/api/v2/deleteipj?ip=${encodeURIComponent(ip)}`);
@@ -82,19 +82,28 @@ function IpManagementPage() {
   };
 
   // Filter IPs by search term
-    const filteredIpList = ipList.filter(item => {
+  const filteredIpList = ipList.filter(item => {
     const term = searchTerm.toLowerCase();
     const ipValue = String(item.ip || "").toLowerCase();
     const emailValue = String(item.email || "").toLowerCase();
     const colidValue = String(item.colid || "").toLowerCase();
-
     return ipValue.includes(term) || emailValue.includes(term) || colidValue.includes(term);
   });
 
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredIpList.length / itemsPerPage);
+  const paginatedIpList = filteredIpList.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  // Reset page on new search
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
+
   return (
     <Box p={4} sx={{ maxWidth: 600, mx: "auto" }}>
-
-      {/* ...form code... */}
       <Typography variant="h5" gutterBottom>
         IP Address Management
       </Typography>
@@ -130,58 +139,82 @@ function IpManagementPage() {
       />
 
       {searchTerm.trim() !== "" && (
-        <List>
-          {filteredIpList.length === 0 ? (
-            <Typography align="center" sx={{ mt: 3 }}>
-              No IP records found
-            </Typography>
-          ) : (
-            filteredIpList.map(({ _id, ip, email, colid, isActive }) => (
-              <React.Fragment key={_id}>
-                <ListItem
-                  secondaryAction={
-                    <>
-                      <Switch
-                        checked={isActive}
-                        onChange={() => handleToggleStatus(ip, !isActive)}
-                        edge="end"
-                        sx={{ mr: 2 }}
-                      />
-                      <IconButton
-                        edge="end"
-                        aria-label="delete"
-                        onClick={() => handleDelete(ip)}
-                        color="error"
-                      >
-                        <DeleteIcon />
-                      </IconButton>
-                    </>
-                  }
-                >
-                  <ListItemText
-                    primary={`IP: ${ip}`}
-                    secondary={
+        <>
+          <List>
+            {paginatedIpList.length === 0 ? (
+              <Typography align="center" sx={{ mt: 3 }}>
+                No IP records found
+              </Typography>
+            ) : (
+              paginatedIpList.map(({ _id, ip, email, colid, isActive }) => (
+                <React.Fragment key={_id}>
+                  <ListItem
+                    secondaryAction={
                       <>
-                        <Typography component="span" variant="body2" color="text.primary">
-                          Email: {email}
-                        </Typography>
-                        <br />
-                        <Typography component="span" variant="body2" color="text.primary">
-                          Colid: {colid || "N/A"}
-                        </Typography>
+                        <Switch
+                          checked={isActive}
+                          onChange={() => handleToggleStatus(ip, !isActive)}
+                          edge="end"
+                          sx={{ mr: 2 }}
+                        />
+                        <IconButton
+                          edge="end"
+                          aria-label="delete"
+                          onClick={() => handleDelete(ip)}
+                          color="error"
+                        >
+                          <DeleteIcon />
+                        </IconButton>
                       </>
                     }
-                  />
-                </ListItem>
-                <Divider />
-              </React.Fragment>
-            ))
+                  >
+                    <ListItemText
+                      primary={`IP: ${ip}`}
+                      secondary={
+                        <>
+                          <Typography component="span" variant="body2" color="text.primary">
+                            Email: {email}
+                          </Typography>
+                          <br />
+                          <Typography component="span" variant="body2" color="text.primary">
+                            Colid: {colid || "N/A"}
+                          </Typography>
+                        </>
+                      }
+                    />
+                  </ListItem>
+                  <Divider />
+                </React.Fragment>
+              ))
+            )}
+          </List>
+
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <Box display="flex" justifyContent="center" alignItems="center" mt={2} gap={1}>
+              <Button
+                variant="outlined"
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+              >
+                Previous
+              </Button>
+              <Typography>
+                Page {currentPage} of {totalPages}
+              </Typography>
+              <Button
+                variant="outlined"
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+              >
+                Next
+              </Button>
+            </Box>
           )}
-        </List>
+        </>
       )}
     </Box>
   );
-
 }
 
 export default IpManagementPage;
