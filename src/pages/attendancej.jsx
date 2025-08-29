@@ -30,7 +30,7 @@ const CustomDay = styled(PickersDay)(({ status }) => ({
 
 const AttendancePage = () => {
   const [ip, setIp] = useState("");
-  const email = global1.user || "";
+  const email = global1.user || "demo@campus.technology";
   const [attendanceList, setAttendanceList] = useState([]);
   const [status, setStatus] = useState("no-checkin");
   const [loading, setLoading] = useState(true);
